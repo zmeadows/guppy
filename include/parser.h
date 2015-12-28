@@ -4,6 +4,7 @@
 #include "ast_printer.h"
 #include "lexer.h"
 
+#include <functional>
 #include <map>
 #include <memory>
 #include <stdexcept>
@@ -42,13 +43,12 @@ struct BinOp {
     inline bool operator<(BinOp b) const { return symbol < b.symbol; }
 };
 
-
-static const std::set<BinOp> DEFAULT_BIN_OPS {
+const static std::set<BinOp> DEFAULT_BIN_OPS {
     BinOp("<", 10, BinOp::Associativity::LEFT),
-    BinOp("+", 20, BinOp::Associativity::LEFT),
-    BinOp("-", 20, BinOp::Associativity::LEFT),
-    BinOp("*", 40, BinOp::Associativity::LEFT),
-    BinOp("^", 50, BinOp::Associativity::RIGHT)
+        BinOp("+", 20, BinOp::Associativity::LEFT),
+        BinOp("-", 20, BinOp::Associativity::LEFT),
+        BinOp("*", 40, BinOp::Associativity::LEFT),
+        BinOp("^", 50, BinOp::Associativity::RIGHT)
 };
 
 struct ParserSettings {
@@ -62,15 +62,17 @@ class Parser {
     std::vector<Token> tokens;
     std::vector<Token>::const_iterator token_iter;
 
-    inline bool accept(const Token &acceptable_type);
-    inline bool accept(const Token::Type acceptable_type);
-    inline bool accept_and_store(const Token::Type acceptable_type,
-            std::string &container);
+    void consumption_handler(bool condition,
+            std::function<void(void)> success_action,
+            std::function<void(void)> failure_action);
 
-    inline void expect(const Token &expected_token);
-    inline void expect(const Token::Type expected_type);
-    inline void expect_and_store(const Token::Type expected_type,
-            std::string &container);
+    bool accept(const Token &acceptable_type);
+    bool accept(const Token::Type acceptable_type);
+    bool accept_and_store(const Token::Type acceptable_type, std::string &container);
+
+    void expect(const Token &expected_token);
+    void expect(const Token::Type expected_type);
+    void expect_and_store(const Token::Type expected_type, std::string &container);
 
     ParserSettings settings;
     inline int get_prec(const std::string &s) const;
@@ -94,9 +96,8 @@ class Parser {
 public:
     Parser() : settings(ParserSettings()) {}
 
-    AST get_ast(const std::string &statement);
+    AST parse_text(const std::string &text);
 
-    void reset() {
-        settings = ParserSettings();
-    };
+    void reset() { settings = ParserSettings(); }
 };
+

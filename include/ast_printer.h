@@ -30,4 +30,4 @@ public:
     ASTPrinter() : tab_level(0), node_output(std::ostringstream()) {}
 };
 
-void print_ast(const AST &ast);
+void print_ast(const AST ast);

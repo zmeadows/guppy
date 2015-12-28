@@ -43,7 +43,7 @@ static const std::map<std::string, Token::Type> RESERVED_IDENTIFIERS = {
 };
 
 static const std::set<std::string> RESERVED_SYMBOLS = {
-    ",", ";", ":", "(", ")"
+    ",", ";", ":", "(", ")", "{", "}"
 };
 
 static inline bool isopch(const char c) {

@@ -33,7 +33,7 @@ struct Prototype {
 struct ASTExternNode : public virtual ASTNode {
     std::unique_ptr<Prototype> prototype;
 
-    void accept(ASTFunctor &functor) const;
+    void accept(ASTFunctor &functor) const override;
     ASTExternNode(std::unique_ptr<Prototype> prototype)
         : prototype(std::move(prototype)) {}
 };
@@ -42,7 +42,7 @@ struct ASTDefnNode : public virtual ASTNode {
     std::unique_ptr<Prototype> prototype;
     std::unique_ptr<Expr> body;
 
-    void accept(ASTFunctor &functor) const;
+    void accept(ASTFunctor &functor) const override;
     ASTDefnNode(std::unique_ptr<Prototype> prototype, std::unique_ptr<Expr> body)
         : prototype(std::move(prototype)), body(std::move(body)) {}
 };
@@ -50,14 +50,14 @@ struct ASTDefnNode : public virtual ASTNode {
 struct VariableExpr : public virtual Expr {
     const std::string name;
 
-    void accept(ASTFunctor &functor) const;
+    void accept(ASTFunctor &functor) const override;
     VariableExpr(const std::string &name) : name(name) {}
 };
 
 struct LiteralDoubleExpr : public virtual Expr {
     const double value;
 
-    void accept(ASTFunctor &functor) const;
+    void accept(ASTFunctor &functor) const override;
     LiteralDoubleExpr(double value) : value(value) {}
 };
 
@@ -65,7 +65,7 @@ struct BinOpExpr : public virtual Expr {
     const std::string binop;
     std::unique_ptr<Expr> LHS, RHS;
 
-    void accept(ASTFunctor &functor) const;
+    void accept(ASTFunctor &functor) const override;
     BinOpExpr(std::string binop, std::unique_ptr<Expr> LHS,
             std::unique_ptr<Expr> RHS)
         : binop(binop), LHS(std::move(LHS)), RHS(std::move(RHS)) {}
@@ -75,7 +75,7 @@ struct CallExpr : public virtual Expr {
     const std::string callee;
     std::vector<std::unique_ptr<Expr>> args;
 
-    void accept(ASTFunctor &functor) const;
+    void accept(ASTFunctor &functor) const override;
     CallExpr(const std::string &callee, std::vector<std::unique_ptr<Expr>> args)
         : callee(callee), args(std::move(args)) {}
 };

@@ -1,80 +1,102 @@
 #include "parser.h"
 
+void Parser::consumption_handler(bool condition,
+        std::function<void(void)> success_action,
+        std::function<void(void)> failure_action)
+{
+    bool ran_out_of_tokens = token_iter == tokens.end()
+        || token_iter->type == Token::Type::END_OF_FILE;
+
+    if (ran_out_of_tokens) {
+        throw ParseIncomplete();
+    } else if (condition) {
+        success_action();
+        token_iter++;
+    } else {
+        failure_action();
+    }
+}
+
 bool
 Parser::accept(const Token &acceptable_token)
 {
-    if (token_iter == tokens.end()) {
-        throw ParseIncomplete();
-    } else if (*token_iter == acceptable_token) {
-        token_iter++;
-        return true;
-    } else {
-        return false;
-    }
+    bool result;
+
+    std::function<void()> s = [&result]() { result = true; };
+    std::function<void()> f = [&result]() { result = false; };
+
+    consumption_handler(*token_iter == acceptable_token, s, f);
+
+    return result;
 }
 
 bool
 Parser::accept(const Token::Type acceptable_type)
 {
-    if (token_iter == tokens.end()) {
-        throw ParseIncomplete();
-    } else if (token_iter->type == acceptable_type) {
-        token_iter++;
-        return true;
-    } else {
-        return false;
-    }
+    bool result;
+
+    std::function<void()> s = [&result]() { result = true; };
+    std::function<void()> f = [&result]() { result = false; };
+
+    consumption_handler(token_iter->type == acceptable_type, s, f);
+
+    return result;
 }
 
 bool
 Parser::accept_and_store(const Token::Type acceptable_type,
         std::string &container)
 {
-    if (token_iter == tokens.end()) {
-        throw ParseIncomplete();
-    } else if (token_iter->type == acceptable_type) {
-        container = token_iter->contents;
-        token_iter++;
-        return true;
-    } else {
-        return false;
-    }
+    bool result;
+
+    std::function<void()> s = [&container, &result, this]() {
+        container = this->token_iter->contents;
+        result = true;
+    };
+
+    std::function<void()> f = [&result]() { result = false; };
+
+    consumption_handler(token_iter->type == acceptable_type, s, f);
+
+    return result;
 }
 
 void
-Parser::expect(const Token &acceptable_token)
+Parser::expect(const Token &expected_token)
 {
-    if (token_iter == tokens.end()) {
-        throw ParseIncomplete();
-    } else if (*token_iter == acceptable_token) {
-        token_iter++;
-    } else {
-        throw ParseError(*token_iter, "unexpected token encountered.");
-    }
+
+    std::function<void()> s = []() { return; };
+    std::function<void()> f = [this]() {
+        throw ParseError(*this->token_iter, "unexpected token encountered.");
+    };
+
+    consumption_handler(*token_iter == expected_token, s, f);
 }
 
 void
 Parser::expect(const Token::Type expected_type)
 {
-    if (token_iter->type == expected_type) {
-        token_iter++;
-    } else {
-        throw ParseError(*token_iter, "unexpected token encountered.");
-    }
+
+    std::function<void()> s = []() { return; };
+    std::function<void()> f = [this]() {
+        throw ParseError(*this->token_iter, "unexpected token encountered.");
+    };
+
+    consumption_handler(token_iter->type == expected_type, s, f);
 }
 
 void
-Parser::expect_and_store(const Token::Type expected_type,
-        std::string &container)
+Parser::expect_and_store(const Token::Type expected_type, std::string &container)
 {
-    if (token_iter == tokens.end()) {
-        throw ParseIncomplete();
-    } else if (token_iter->type == expected_type) {
-        container = token_iter->contents;
-        token_iter++;
-    } else {
-        throw ParseError(*token_iter, "unexpected token encountered.");
-    }
+
+    std::function<void()> s = [&container, this]() {
+        container = this->token_iter->contents;
+    };
+    std::function<void()> f = [this]() {
+        throw ParseError(*this->token_iter, "unexpected token encountered.");
+    };
+
+    consumption_handler(token_iter->type == expected_type, s, f);
 }
 
 int
@@ -133,7 +155,9 @@ std::unique_ptr<ASTNode>
 Parser::parse_defn()
 {
     auto prototype = parse_prototype();
+    expect(Token(Token::Type::RESERVED_SYMBOL, "{"));
     auto expr = parse_expr();
+    expect(Token(Token::Type::RESERVED_SYMBOL, "}"));
 
     return std::make_unique<ASTDefnNode>(std::move(prototype), std::move(expr));
 }
@@ -259,10 +283,10 @@ Parser::parse_paren_expr()
 }
 
 AST
-Parser::get_ast(const std::string &statement)
+Parser::parse_text(const std::string &text)
 {
     AST ast;
-    tokens = tokenize(statement);
+    tokens = tokenize(text);
     token_iter = tokens.begin();
 
     while (token_iter->type != Token::Type::END_OF_FILE) {

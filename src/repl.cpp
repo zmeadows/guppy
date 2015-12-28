@@ -11,19 +11,20 @@ repl()
         try
         {
             user_input += new_user_input_line;
-            ast = parser.get_ast(user_input);
+            ast = parser.parse_text(user_input);
             user_input.clear();
         }
 
         catch (ParseIncomplete inc_exc)
         {
             std::cout << "INCOMPLETE INPUT ENCOUNTERED..." << std::endl;
+            user_input += " ";
             return;
         }
 
         catch (ParseError perr)
         {
-            perr.what();
+            std::cout << perr.what();
             return;
         }
     };
