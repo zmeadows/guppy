@@ -2,92 +2,133 @@
 
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <vector>
 
-class ASTFunctor;
+/*
+<MODULE>      ::= <NODE>*
+<NODE>   ::= <DECLARATION> | <DEFINITION>
+<DECLARATION> ::= EXTERN <PROTOTYPE>
+<PROTOTYPE>   ::= IDENTIFIER OPEN_PAREN (IDENTIFIER COMMA ?)* CLOSE_PAREN
+<DEFINITION>  ::= DEFN <PROTOTYPE> OPEN_CURL_BRACKET <E> CLOSE_CURL_BRACKET
 
-class ASTFunctee {
-public:
-    virtual void accept(ASTFunctor &functor) const = 0;
-    virtual ~ASTFunctee() {}
+<E> ::= <EXPR(0)>
+<EXPR(p)>  ::= <P> (<BINOP> <EXPR(q)>)*
+<P> ::= IDENTIFIER | DOUBLE | <CALL_EXPR> | <PAREN_EXPR>
+<CALL_EXPR>   ::= IDENTIFIER OPEN_PAREN (<EXPR> COMMA ?)* CLOSE_PAREN
+<PAREN_EXPR>  ::= OPEN_PAREN <EXPR> CLOSE_PAREN
+<BINOP> ::= "+" | "-" | "*" | "/" | "^" | "<"
+*/
+
+class NodeTraverser;
+class ExprTraverser;
+
+template< typename T >
+struct is_traverser {
+    static const bool value = false;
 };
 
-struct ASTNode : public virtual ASTFunctee {
+template<>
+struct is_traverser< NodeTraverser > {
+    static const bool value = true;
+};
+
+template<>
+struct is_traverser< ExprTraverser > {
+    static const bool value = true;
+};
+
+template < typename T >
+struct ASTTraversable {
+    static_assert(is_traverser<T>::value,
+            "ASTTraversable type must be NodeTraverse or ExprTraverser");
+
+    virtual void inject(T &traverser) const = 0;
+    virtual ~ASTTraversable() {}
+};
+
+struct ASTNode : public virtual ASTTraversable<NodeTraverser> {
     virtual ~ASTNode() {}
 };
 
-typedef std::vector<std::unique_ptr<ASTNode>> AST;
-
-struct Expr : public virtual ASTFunctee {
-    virtual ~Expr() {}
+struct ASTExpr : public virtual ASTTraversable<ExprTraverser> {
+    virtual ~ASTExpr() {}
 };
 
-struct Prototype {
+struct PrototypeAST {
     const std::string name;
     const std::vector<std::string> args;
 
-    Prototype(const std::string &name, const std::vector<std::string> &args)
+    PrototypeAST(const std::string &name, const std::vector<std::string> &args)
         : name(name), args(std::move(args)) {}
 };
 
-struct ASTExternNode : public virtual ASTNode {
-    std::unique_ptr<Prototype> prototype;
+struct ExternASTNode : public virtual ASTNode {
+    std::unique_ptr<PrototypeAST> prototype;
 
-    void accept(ASTFunctor &functor) const override;
-    ASTExternNode(std::unique_ptr<Prototype> prototype)
+    void inject(NodeTraverser &functor) const override;
+    ExternASTNode(std::unique_ptr<PrototypeAST> prototype)
         : prototype(std::move(prototype)) {}
 };
 
-struct ASTDefnNode : public virtual ASTNode {
-    std::unique_ptr<Prototype> prototype;
-    std::unique_ptr<Expr> body;
+struct DefnASTNode : public virtual ASTNode {
+    std::unique_ptr<PrototypeAST> prototype;
+    std::unique_ptr<ASTExpr> body;
 
-    void accept(ASTFunctor &functor) const override;
-    ASTDefnNode(std::unique_ptr<Prototype> prototype, std::unique_ptr<Expr> body)
+    void inject(NodeTraverser &functor) const override;
+    DefnASTNode(std::unique_ptr<PrototypeAST> prototype, std::unique_ptr<ASTExpr> body)
         : prototype(std::move(prototype)), body(std::move(body)) {}
 };
 
-struct VariableExpr : public virtual Expr {
+struct VariableASTExpr : public virtual ASTExpr {
     const std::string name;
 
-    void accept(ASTFunctor &functor) const override;
-    VariableExpr(const std::string &name) : name(name) {}
+    void inject(ExprTraverser &functor) const override;
+    VariableASTExpr(const std::string &name) : name(name) {}
 };
 
-struct LiteralDoubleExpr : public virtual Expr {
+struct LiteralDoubleASTExpr : public virtual ASTExpr {
     const double value;
 
-    void accept(ASTFunctor &functor) const override;
-    LiteralDoubleExpr(double value) : value(value) {}
+    void inject(ExprTraverser &functor) const override;
+    LiteralDoubleASTExpr(double value) : value(value) {}
 };
 
-struct BinOpExpr : public virtual Expr {
+struct BinOpASTExpr : public virtual ASTExpr {
     const std::string binop;
-    std::unique_ptr<Expr> LHS, RHS;
+    std::unique_ptr<ASTExpr> LHS, RHS;
 
-    void accept(ASTFunctor &functor) const override;
-    BinOpExpr(std::string binop, std::unique_ptr<Expr> LHS,
-            std::unique_ptr<Expr> RHS)
+    void inject(ExprTraverser &functor) const override;
+    BinOpASTExpr(std::string binop, std::unique_ptr<ASTExpr> LHS,
+            std::unique_ptr<ASTExpr> RHS)
         : binop(binop), LHS(std::move(LHS)), RHS(std::move(RHS)) {}
 };
 
-struct CallExpr : public virtual Expr {
+struct CallASTExpr : public virtual ASTExpr {
     const std::string callee;
-    std::vector<std::unique_ptr<Expr>> args;
+    std::vector<std::unique_ptr<ASTExpr>> args;
 
-    void accept(ASTFunctor &functor) const override;
-    CallExpr(const std::string &callee, std::vector<std::unique_ptr<Expr>> args)
+    void inject(ExprTraverser &functor) const override;
+    CallASTExpr(const std::string &callee, std::vector<std::unique_ptr<ASTExpr>> args)
         : callee(callee), args(std::move(args)) {}
 };
 
-class ASTFunctor {
+class NodeTraverser {
 public:
-    virtual void apply(const ASTExternNode &extern_node) = 0;
-    virtual void apply(const ASTDefnNode &defn_node) = 0;
-    virtual void apply(const VariableExpr &var_expr) = 0;
-    virtual void apply(const LiteralDoubleExpr &double_expr) = 0;
-    virtual void apply(const BinOpExpr &bin_op_expr) = 0;
-    virtual void apply(const CallExpr &call_expr) = 0;
+    virtual void apply(const ExternASTNode &extern_node) = 0;
+    virtual void apply(const DefnASTNode &defn_node) = 0;
 
-    virtual ~ASTFunctor() {}
+    virtual ~NodeTraverser() {}
 };
+
+class ExprTraverser {
+public:
+    virtual void apply(const VariableASTExpr &var_expr) = 0;
+    virtual void apply(const LiteralDoubleASTExpr &double_expr) = 0;
+    virtual void apply(const BinOpASTExpr &bin_op_expr) = 0;
+    virtual void apply(const CallASTExpr &call_expr) = 0;
+
+    virtual ~ExprTraverser() {}
+};
+
+typedef std::vector<std::unique_ptr<ASTNode>> AST;

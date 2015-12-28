@@ -15,7 +15,7 @@ ASTPrinter::append_line_to_output(std::ostringstream &line)
 }
 
 void
-ASTPrinter::process_prototype(const Prototype &proto)
+ASTPrinter::process_prototype(const PrototypeAST &proto)
 {
     std::ostringstream tmp;
 
@@ -39,7 +39,7 @@ ASTPrinter::print_node_output()
 }
 
 void
-ASTPrinter::apply(const ASTExternNode &extern_node)
+ASTPrinter::apply(const ExternASTNode &extern_node)
 {
     std::ostringstream tmp;
     tmp << "EXTERN:";
@@ -52,7 +52,7 @@ ASTPrinter::apply(const ASTExternNode &extern_node)
 }
 
 void
-ASTPrinter::apply(const ASTDefnNode &defn_node)
+ASTPrinter::apply(const DefnASTNode &defn_node)
 {
     std::ostringstream tmp;
     tmp << "DEFN:";
@@ -65,13 +65,13 @@ ASTPrinter::apply(const ASTDefnNode &defn_node)
     append_line_to_output(tmp);
     tab_level++;
 
-    defn_node.body->accept(*this);
+    defn_node.body->inject(*this);
 
     print_node_output();
 }
 
 void
-ASTPrinter::apply(const VariableExpr &var_expr)
+ASTPrinter::apply(const VariableASTExpr &var_expr)
 {
     std::ostringstream tmp;
     tmp << "VARIABLE: " << var_expr.name;
@@ -79,7 +79,7 @@ ASTPrinter::apply(const VariableExpr &var_expr)
 }
 
 void
-ASTPrinter::apply(const LiteralDoubleExpr &double_expr)
+ASTPrinter::apply(const LiteralDoubleASTExpr &double_expr)
 {
     std::ostringstream tmp;
     tmp << "DOUBLE: " << double_expr.value;
@@ -87,7 +87,7 @@ ASTPrinter::apply(const LiteralDoubleExpr &double_expr)
 }
 
 void
-ASTPrinter::apply(const BinOpExpr &bin_op_expr)
+ASTPrinter::apply(const BinOpASTExpr &bin_op_expr)
 {
     std::ostringstream tmp;
     tmp << "BINOP: " << bin_op_expr.binop;
@@ -95,15 +95,15 @@ ASTPrinter::apply(const BinOpExpr &bin_op_expr)
     tab_level++;
 
     tmp << "LHS:";
-    bin_op_expr.LHS->accept(*this);
+    bin_op_expr.LHS->inject(*this);
 
     tmp << "RHS:";
-    bin_op_expr.RHS->accept(*this);
+    bin_op_expr.RHS->inject(*this);
     tab_level--;
 }
 
 void
-ASTPrinter::apply(const CallExpr &call_expr)
+ASTPrinter::apply(const CallASTExpr &call_expr)
 {
     std::ostringstream tmp;
     tmp << "CALL:";
@@ -122,7 +122,7 @@ ASTPrinter::apply(const CallExpr &call_expr)
         append_line_to_output(tmp);
         i++;
         tab_level++;
-        a->accept(*this);
+        a->inject(*this);
         tab_level--;
     }
 

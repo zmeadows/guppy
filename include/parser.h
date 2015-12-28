@@ -78,20 +78,20 @@ class Parser {
     inline int get_prec(const std::string &s) const;
     inline BinOp::Associativity get_assoc(const std::string &s) const;
 
-    std::unique_ptr<Prototype> parse_prototype();
+    std::unique_ptr<PrototypeAST> parse_prototype();
 
     std::unique_ptr<ASTNode> parse_statement();
     std::unique_ptr<ASTNode> parse_defn();
     std::unique_ptr<ASTNode> parse_extern();
     std::unique_ptr<ASTNode> parse_top_level_expression();
 
-    std::unique_ptr<Expr> parse_expr();
-    std::unique_ptr<Expr> parse_expr(int p);
-    std::unique_ptr<Expr> parse_primary_expr();
-    std::unique_ptr<Expr> parse_identifier_expr();
-    std::unique_ptr<Expr> parse_numeric_literal_expr();
-    std::unique_ptr<Expr> parse_paren_expr();
-    std::unique_ptr<Expr> parse_bin_op_rhs(int expr_prec, std::unique_ptr<Expr> LHS);
+    std::unique_ptr<ASTExpr> parse_expr();
+    std::unique_ptr<ASTExpr> parse_expr(int p);
+    std::unique_ptr<ASTExpr> parse_primary_expr();
+    std::unique_ptr<ASTExpr> parse_identifier_expr();
+    std::unique_ptr<ASTExpr> parse_numeric_literal_expr();
+    std::unique_ptr<ASTExpr> parse_paren_expr();
+    std::unique_ptr<ASTExpr> parse_bin_op_rhs(int expr_prec, std::unique_ptr<ASTExpr> LHS);
 
 public:
     Parser() : settings(ParserSettings()) {}

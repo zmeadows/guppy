@@ -3,7 +3,6 @@
 #include "ast.h"
 #include "util.h"
 
-#include <assert.h>
 #include <map>
 #include <memory>
 #include <string>
@@ -23,19 +22,35 @@ struct ModuleGenerator {
     ModuleGenerator() : builder(std::make_unique<llvm::IRBuilder<>>(llvm::getGlobalContext())) {}
 };
 
-class ASTValueGen : public virtual ASTFunctor {
-    ModuleGenerator* generator;
-    llvm::Value* value;
+template < typename A, typename B >
+class Accumulator : public virtual B {
+    static_assert(is_traverser<B>::value,
+            "ASTTraversable type in Accumulator must be NodeTraverse or ExprTraverser");
+protected:
+    ModuleGenerator* const generator;
+    A value;
 
 public:
-    void apply(const ASTExternNode &extern_node) override;
-    void apply(const ASTDefnNode &defn_node) override;
-    void apply(const VariableExpr &var_expr) override;
-    void apply(const LiteralDoubleExpr &double_expr) override;
-    void apply(const BinOpExpr &bin_op_expr) override;
-    void apply(const CallExpr &call_expr) override;
+    A get() { return value; }
 
-    llvm::Value* get_value() const { return value; }
+    Accumulator(ModuleGenerator* generator, A def_val)
+        : generator(generator), value(def_val) {}
+};
 
-    ASTValueGen(ModuleGenerator* generator) : generator(generator), value(nullptr) {}
+struct ValueGen : public Accumulator<llvm::Value*, ExprTraverser> {
+    void apply(const VariableASTExpr &var_expr) override;
+    void apply(const LiteralDoubleASTExpr &double_expr) override;
+    void apply(const BinOpASTExpr &bin_op_expr) override;
+    void apply(const CallASTExpr &call_expr) override;
+
+    ValueGen(ModuleGenerator* generator) :
+        Accumulator(generator, nullptr) {}
+};
+
+struct FunctionGen : public Accumulator<llvm::Function*, NodeTraverser> {
+    void apply(const ExternASTNode &extern_node) override;
+    void apply(const DefnASTNode &defn_node) override;
+
+    FunctionGen(ModuleGenerator* generator) :
+        Accumulator(generator, nullptr) {}
 };

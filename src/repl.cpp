@@ -49,7 +49,7 @@ repl()
 
         for (auto const &a : ast)
         {
-            a->accept(printer);
+            a->inject(printer);
         }
         ast.clear();
 

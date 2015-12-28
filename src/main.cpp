@@ -32,7 +32,7 @@ int main(void) {
 
     // for (auto &node : ast)
     // {
-    //     node->accept(printer);
+    //     node->inject(printer);
     // }
 
     repl();

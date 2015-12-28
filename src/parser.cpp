@@ -119,7 +119,7 @@ Parser::get_assoc(const std::string &s) const
     throw ParseError(*token_iter, "unrecognized operator encountered");
 }
 
-std::unique_ptr<Prototype>
+std::unique_ptr<PrototypeAST>
 Parser::parse_prototype()
 {
     std::string func_name;
@@ -136,7 +136,7 @@ Parser::parse_prototype()
 
     expect(Token(Token::Type::RESERVED_SYMBOL, ")"));
 
-    return std::make_unique<Prototype>(func_name, std::move(arg_names));
+    return std::make_unique<PrototypeAST>(func_name, std::move(arg_names));
 }
 
 std::unique_ptr<ASTNode>
@@ -159,7 +159,7 @@ Parser::parse_defn()
     auto expr = parse_expr();
     expect(Token(Token::Type::RESERVED_SYMBOL, "}"));
 
-    return std::make_unique<ASTDefnNode>(std::move(prototype), std::move(expr));
+    return std::make_unique<DefnASTNode>(std::move(prototype), std::move(expr));
 }
 
 std::unique_ptr<ASTNode>
@@ -167,7 +167,7 @@ Parser::parse_extern()
 {
     auto prototype = parse_prototype();
 
-    return std::make_unique<ASTExternNode>(std::move(prototype));
+    return std::make_unique<ExternASTNode>(std::move(prototype));
 }
 
 std::unique_ptr<ASTNode>
@@ -175,21 +175,21 @@ Parser::parse_top_level_expression()
 {
     /* treat top level function as anonymous function with no arguments */
     auto expr = parse_expr();
-    auto prototype = std::make_unique<Prototype>("__ANON__", std::vector<std::string>());
+    auto prototype = std::make_unique<PrototypeAST>("__ANON__", std::vector<std::string>());
 
-    return std::make_unique<ASTDefnNode>(std::move(prototype), std::move(expr));
+    return std::make_unique<DefnASTNode>(std::move(prototype), std::move(expr));
 }
 
-std::unique_ptr<Expr>
+std::unique_ptr<ASTExpr>
 Parser::parse_expr()
 {
     return parse_expr(0);
 }
 
-std::unique_ptr<Expr>
+std::unique_ptr<ASTExpr>
 Parser::parse_expr(int p)
 {
-    std::unique_ptr<Expr> LHS = parse_primary_expr();
+    std::unique_ptr<ASTExpr> LHS = parse_primary_expr();
 
     while (token_iter->type == Token::Type::OPERATOR
             && get_prec(token_iter->contents) >= p)
@@ -212,13 +212,13 @@ Parser::parse_expr(int p)
 
         // TODO: use shared_ptr or something to have single instance of binops?
         // for a big file, all these strings will add up
-        LHS = std::make_unique<BinOpExpr>(binop_str, std::move(LHS), std::move(RHS));
+        LHS = std::make_unique<BinOpASTExpr>(binop_str, std::move(LHS), std::move(RHS));
     }
 
     return LHS;
 }
 
-std::unique_ptr<Expr>
+std::unique_ptr<ASTExpr>
 Parser::parse_primary_expr()
 {
     if (token_iter->type == Token::Type::IDENTIFIER) {
@@ -238,7 +238,7 @@ Parser::parse_primary_expr()
     }
 }
 
-std::unique_ptr<Expr>
+std::unique_ptr<ASTExpr>
 Parser::parse_identifier_expr()
 {
     std::string identifier_name;
@@ -247,7 +247,7 @@ Parser::parse_identifier_expr()
     if (accept(Token(Token::Type::RESERVED_SYMBOL, "("))) {
         /* found open parenthesis so identifier is function call */
 
-        std::vector<std::unique_ptr<Expr>> args;
+        std::vector<std::unique_ptr<ASTExpr>> args;
         if (*token_iter != Token(Token::Type::RESERVED_SYMBOL, ")")) {
             do
                 args.push_back(parse_expr());
@@ -256,23 +256,23 @@ Parser::parse_identifier_expr()
 
         expect(Token(Token::Type::RESERVED_SYMBOL, ")"));
 
-        return std::make_unique<CallExpr>(identifier_name, std::move(args));
+        return std::make_unique<CallASTExpr>(identifier_name, std::move(args));
 
     } else { /* otherwise it is just a variable */
-        return std::make_unique<VariableExpr>(identifier_name);
+        return std::make_unique<VariableASTExpr>(identifier_name);
     }
 }
 
-std::unique_ptr<Expr>
+std::unique_ptr<ASTExpr>
 Parser::parse_numeric_literal_expr()
 {
     std::string double_str;
     expect_and_store(Token::Type::NUMERIC_LITERAL, double_str);
 
-    return std::make_unique<LiteralDoubleExpr>(std::stod(double_str));
+    return std::make_unique<LiteralDoubleASTExpr>(std::stod(double_str));
 }
 
-std::unique_ptr<Expr>
+std::unique_ptr<ASTExpr>
 Parser::parse_paren_expr()
 {
     expect(Token(Token::Type::RESERVED_SYMBOL, "("));
