@@ -26,11 +26,16 @@ std::string get_file_contents(const char *filename)
 int main(void) {
     // std::string fstr = get_file_contents("foo.gup");
     // Parser p = Parser();
-    // AST ast = p.get_ast(fstr);
+    // AST ast = p.parse_text(fstr);
 
-    //print_ast(ast);
+    // ASTPrinter printer = ASTPrinter();
+
+    // for (auto &node : ast)
+    // {
+    //     node->accept(printer);
+    // }
+
     repl();
-
     return 0;
 }
 

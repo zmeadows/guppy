@@ -11,23 +11,16 @@ class ASTPrinter : public virtual ASTFunctor {
     std::ostringstream node_output;
     void append_line_to_output(std::ostringstream &line);
     void process_prototype(const Prototype &proto);
+    void print_node_output();
 
 public:
-    void apply(const ASTExternNode &extern_node);
-    void apply(const ASTDefnNode &defn_node);
-    void apply(const VariableExpr &var_expr);
-    void apply(const LiteralDoubleExpr &double_expr);
-    void apply(const BinOpExpr &bin_op_expr);
-    void apply(const CallExpr &call_expr);
-
-    void get_node_output(std::string &container) {
-        container = node_output.str();
-        node_output.str("");
-        node_output.clear();
-        tab_level = 0;
-    }
+    void apply(const ASTExternNode &extern_node) override;
+    void apply(const ASTDefnNode &defn_node) override;
+    void apply(const VariableExpr &var_expr) override;
+    void apply(const LiteralDoubleExpr &double_expr) override;
+    void apply(const BinOpExpr &bin_op_expr) override;
+    void apply(const CallExpr &call_expr) override;
 
     ASTPrinter() : tab_level(0), node_output(std::ostringstream()) {}
 };
 
-void print_ast(const AST ast);

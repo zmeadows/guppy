@@ -24,7 +24,7 @@ repl()
 
         catch (ParseError perr)
         {
-            std::cout << perr.what();
+            //std::cout << perr.what();
             return;
         }
     };
@@ -50,8 +50,6 @@ repl()
         for (auto const &a : ast)
         {
             a->accept(printer);
-            printer.get_node_output(printer_output);
-            std::cout << printer_output;
         }
         ast.clear();
 

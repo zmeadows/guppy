@@ -91,4 +91,3 @@ public:
 
     virtual ~ASTFunctor() {}
 };
-

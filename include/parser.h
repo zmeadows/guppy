@@ -20,11 +20,11 @@ public:
         : std::runtime_error(msg), err_token(err_token) {}
 };
 
-class ParseIncomplete : public std::runtime_error
+class ParseIncomplete //: public std::runtime_error
 {
 public:
-    ParseIncomplete() :
-        std::runtime_error("reached end of file before finished parsing.") {}
+    ParseIncomplete() {}
+        //std::runtime_error("reached end of file before finished parsing.") {}
 };
 
 struct BinOp {

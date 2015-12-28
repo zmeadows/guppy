@@ -6,7 +6,7 @@ ASTPrinter::append_line_to_output(std::ostringstream &line)
     if (tab_level == 0) {
         node_output << line.str() << '\n';
     } else {
-        for (int i = 0; i < tab_level; i++)
+        for (unsigned i = 0; i < tab_level; i++)
             node_output << '|' << "  ";
         node_output << line.str() << '\n';
     }
@@ -30,6 +30,15 @@ ASTPrinter::process_prototype(const Prototype &proto)
 }
 
 void
+ASTPrinter::print_node_output()
+{
+    std::cout << node_output.str() << std::endl;
+    node_output.str("");
+    node_output.clear();
+    tab_level = 0;
+}
+
+void
 ASTPrinter::apply(const ASTExternNode &extern_node)
 {
     std::ostringstream tmp;
@@ -38,9 +47,8 @@ ASTPrinter::apply(const ASTExternNode &extern_node)
     tab_level++;
 
     process_prototype(*extern_node.prototype);
-    tab_level--;
 
-    node_output << std::string(1,'\n');
+    print_node_output();
 }
 
 void
@@ -59,8 +67,7 @@ ASTPrinter::apply(const ASTDefnNode &defn_node)
 
     defn_node.body->accept(*this);
 
-    tab_level -= 2;
-    node_output << std::string(1,'\n');
+    print_node_output();
 }
 
 void
@@ -93,7 +100,6 @@ ASTPrinter::apply(const BinOpExpr &bin_op_expr)
     tmp << "RHS:";
     bin_op_expr.RHS->accept(*this);
     tab_level--;
-
 }
 
 void
@@ -119,17 +125,6 @@ ASTPrinter::apply(const CallExpr &call_expr)
         a->accept(*this);
         tab_level--;
     }
-}
 
-void
-print_ast(const AST &ast)
-{
-    ASTPrinter printer = ASTPrinter();
-    std::string output;
-    for (auto const &node : ast)
-    {
-        node->accept(printer);
-        printer.get_node_output(output);
-        std::cout << output;
-    }
+    tab_level -= 2;
 }
