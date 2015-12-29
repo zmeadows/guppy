@@ -39,7 +39,7 @@ ASTPrinter::print_node_output()
 }
 
 void
-ASTPrinter::apply(const ExternASTNode &extern_node)
+ASTPrinter::apply_to(const ExternASTNode &extern_node)
 {
     std::ostringstream tmp;
     tmp << "EXTERN:";
@@ -52,7 +52,7 @@ ASTPrinter::apply(const ExternASTNode &extern_node)
 }
 
 void
-ASTPrinter::apply(const DefnASTNode &defn_node)
+ASTPrinter::apply_to(const DefnASTNode &defn_node)
 {
     std::ostringstream tmp;
     tmp << "DEFN:";
@@ -71,7 +71,7 @@ ASTPrinter::apply(const DefnASTNode &defn_node)
 }
 
 void
-ASTPrinter::apply(const VariableASTExpr &var_expr)
+ASTPrinter::apply_to(const VariableASTExpr &var_expr)
 {
     std::ostringstream tmp;
     tmp << "VARIABLE: " << var_expr.name;
@@ -79,7 +79,7 @@ ASTPrinter::apply(const VariableASTExpr &var_expr)
 }
 
 void
-ASTPrinter::apply(const LiteralDoubleASTExpr &double_expr)
+ASTPrinter::apply_to(const LiteralDoubleASTExpr &double_expr)
 {
     std::ostringstream tmp;
     tmp << "DOUBLE: " << double_expr.value;
@@ -87,7 +87,7 @@ ASTPrinter::apply(const LiteralDoubleASTExpr &double_expr)
 }
 
 void
-ASTPrinter::apply(const BinOpASTExpr &bin_op_expr)
+ASTPrinter::apply_to(const BinOpASTExpr &bin_op_expr)
 {
     std::ostringstream tmp;
     tmp << "BINOP: " << bin_op_expr.binop;
@@ -103,7 +103,7 @@ ASTPrinter::apply(const BinOpASTExpr &bin_op_expr)
 }
 
 void
-ASTPrinter::apply(const CallASTExpr &call_expr)
+ASTPrinter::apply_to(const CallASTExpr &call_expr)
 {
     std::ostringstream tmp;
     tmp << "CALL:";
