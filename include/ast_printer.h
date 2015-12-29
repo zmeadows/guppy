@@ -17,12 +17,12 @@ class ASTPrinter :
     void print_node_output();
 
 public:
-    void apply(const ExternASTNode &extern_node) override;
-    void apply(const DefnASTNode &defn_node) override;
-    void apply(const VariableASTExpr &var_expr) override;
-    void apply(const LiteralDoubleASTExpr &double_expr) override;
-    void apply(const BinOpASTExpr &bin_op_expr) override;
-    void apply(const CallASTExpr &call_expr) override;
+    void apply_to(const ExternASTNode &extern_node) override;
+    void apply_to(const DefnASTNode &defn_node) override;
+    void apply_to(const VariableASTExpr &var_expr) override;
+    void apply_to(const LiteralDoubleASTExpr &double_expr) override;
+    void apply_to(const BinOpASTExpr &bin_op_expr) override;
+    void apply_to(const CallASTExpr &call_expr) override;
 
     ASTPrinter() : tab_level(0), node_output(std::ostringstream()) {}
 };
