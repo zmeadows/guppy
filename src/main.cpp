@@ -2,6 +2,7 @@
 #include "ast_printer.h"
 #include "parser.h"
 #include "repl.h"
+#include "codegen.h"
 
 #include <cerrno>
 #include <fstream>
@@ -24,18 +25,21 @@ std::string get_file_contents(const char *filename)
 }
 
 int main(void) {
-    // std::string fstr = get_file_contents("foo.gup");
-    // Parser p = Parser();
-    // AST ast = p.parse_text(fstr);
+    std::string fstr = get_file_contents("foo.gup");
+    Parser p = Parser();
+    AST ast = p.parse_text(fstr);
 
-    // ASTPrinter printer = ASTPrinter();
+    UnitGeneratorContext ugc;
 
-    // for (auto &node : ast)
-    // {
-    //     node->inject(printer);
-    // }
+    FunctionGen fgen(&ugc);
 
-    repl();
+
+    for (auto &node : ast)
+    {
+        node->inject(fgen);
+        fgen.extract()->dump();
+    }
+
     return 0;
 }
 
