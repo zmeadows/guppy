@@ -6,7 +6,7 @@
 #include <vector>
 
 /*
-<MODULE>      ::= <NODE>*
+<UNIT>      ::= <NODE>*
 <NODE>   ::= <DECLARATION> | <DEFINITION>
 <DECLARATION> ::= EXTERN <PROTOTYPE>
 <PROTOTYPE>   ::= IDENTIFIER OPEN_PAREN (IDENTIFIER COMMA ?)* CLOSE_PAREN
@@ -66,7 +66,7 @@ struct PrototypeAST {
 struct ExternASTNode : public virtual ASTNode {
     std::unique_ptr<PrototypeAST> prototype;
 
-    void inject(NodeTraverser &functor) const override;
+    void inject(NodeTraverser &traverser) const override;
     ExternASTNode(std::unique_ptr<PrototypeAST> prototype)
         : prototype(std::move(prototype)) {}
 };
@@ -75,7 +75,7 @@ struct DefnASTNode : public virtual ASTNode {
     std::unique_ptr<PrototypeAST> prototype;
     std::unique_ptr<ASTExpr> body;
 
-    void inject(NodeTraverser &functor) const override;
+    void inject(NodeTraverser &traverser) const override;
     DefnASTNode(std::unique_ptr<PrototypeAST> prototype, std::unique_ptr<ASTExpr> body)
         : prototype(std::move(prototype)), body(std::move(body)) {}
 };
@@ -83,14 +83,14 @@ struct DefnASTNode : public virtual ASTNode {
 struct VariableASTExpr : public virtual ASTExpr {
     const std::string name;
 
-    void inject(ExprTraverser &functor) const override;
+    void inject(ExprTraverser &traverser) const override;
     VariableASTExpr(const std::string &name) : name(name) {}
 };
 
 struct LiteralDoubleASTExpr : public virtual ASTExpr {
     const double value;
 
-    void inject(ExprTraverser &functor) const override;
+    void inject(ExprTraverser &traverser) const override;
     LiteralDoubleASTExpr(double value) : value(value) {}
 };
 
@@ -98,7 +98,7 @@ struct BinOpASTExpr : public virtual ASTExpr {
     const std::string binop;
     std::unique_ptr<ASTExpr> LHS, RHS;
 
-    void inject(ExprTraverser &functor) const override;
+    void inject(ExprTraverser &traverser) const override;
     BinOpASTExpr(std::string binop, std::unique_ptr<ASTExpr> LHS,
             std::unique_ptr<ASTExpr> RHS)
         : binop(binop), LHS(std::move(LHS)), RHS(std::move(RHS)) {}
@@ -108,25 +108,25 @@ struct CallASTExpr : public virtual ASTExpr {
     const std::string callee;
     std::vector<std::unique_ptr<ASTExpr>> args;
 
-    void inject(ExprTraverser &functor) const override;
+    void inject(ExprTraverser &traverser) const override;
     CallASTExpr(const std::string &callee, std::vector<std::unique_ptr<ASTExpr>> args)
         : callee(callee), args(std::move(args)) {}
 };
 
 class NodeTraverser {
 public:
-    virtual void apply(const ExternASTNode &extern_node) = 0;
-    virtual void apply(const DefnASTNode &defn_node) = 0;
+    virtual void apply_to(const ExternASTNode &extern_node) = 0;
+    virtual void apply_to(const DefnASTNode &defn_node) = 0;
 
     virtual ~NodeTraverser() {}
 };
 
 class ExprTraverser {
 public:
-    virtual void apply(const VariableASTExpr &var_expr) = 0;
-    virtual void apply(const LiteralDoubleASTExpr &double_expr) = 0;
-    virtual void apply(const BinOpASTExpr &bin_op_expr) = 0;
-    virtual void apply(const CallASTExpr &call_expr) = 0;
+    virtual void apply_to(const VariableASTExpr &var_expr) = 0;
+    virtual void apply_to(const LiteralDoubleASTExpr &double_expr) = 0;
+    virtual void apply_to(const BinOpASTExpr &bin_op_expr) = 0;
+    virtual void apply_to(const CallASTExpr &call_expr) = 0;
 
     virtual ~ExprTraverser() {}
 };
