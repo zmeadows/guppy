@@ -26,10 +26,11 @@ struct Token {
     std::string contents;
     unsigned linum, colnum;
 
-    Token(Token::Type type, const std::string &contents,
-            unsigned linum, unsigned colnum);
+    Token(Token::Type type, const std::string &contents, unsigned linum, unsigned colnum)
+        : type(type), contents(contents), linum(linum), colnum(colnum) {}
 
-    Token(Token::Type type, const std::string &contents);
+    Token(Token::Type type, const std::string &contents)
+        : type(type), contents(contents), linum(0), colnum(0) {}
 };
 
 void print_token(const Token &t);
