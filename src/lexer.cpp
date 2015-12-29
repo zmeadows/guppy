@@ -1,12 +1,6 @@
 #include "util.h"
 #include "lexer.h"
 
-Token::Token(Token::Type type, const std::string &contents,
-        unsigned linum, unsigned colnum) :
-    type(type), contents(contents), linum(linum), colnum(colnum) {}
-
-Token::Token(Token::Type type, const std::string &contents) :
-    type(type), contents(contents), linum(0), colnum(0) {}
 
 bool operator ==(const Token &t1, const Token &t2) {
     return std::tie(t1.type, t1.contents) == std::tie(t2.type, t2.contents);
@@ -143,10 +137,10 @@ void print_token(const Token &t) {
         {Token::Type::DEFN             , "DEFN"},
         {Token::Type::EXTERN           , "EXTERN"},
         {Token::Type::IDENTIFIER       , "IDENTIFIER"},
-        {Token::Type::NUMERIC_LITERAL , "NUMERIC_LITERAL"},
+        {Token::Type::NUMERIC_LITERAL  , "NUMERIC_LITERAL"},
         {Token::Type::RESERVED_SYMBOL  , "RESERVED_SYMBOL"},
         {Token::Type::OPERATOR         , "OPERATOR"},
-        {Token::Type::END_OF_FILE         , "EOF"}
+        {Token::Type::END_OF_FILE      , "EOF"}
     };
 
     std::string type_str = TOKEN_TYPE_STRING_MAP.find(t.type)->second;
